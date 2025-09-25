@@ -11,11 +11,8 @@ export type Todo = {
 };
 
 // Simulated database data
-const MOCK_TODOS: Todo[] = [
-  { id: 1, title: "Learn Next.js", completed: false },
-  { id: 2, title: "Build a project", completed: true },
-  { id: 3, title: "Write documentation", completed: false },
-];
+const MOCK_TODOS: Todo[] = [];
+
 
 export async function fetchTodos() {
   try {
