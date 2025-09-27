@@ -1,63 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import { useTransition } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import type { Todo } from "../actions/fetchData";
-import { toggleTodo, createTodo } from "../actions/fetchData";
 
-type TodoListProps = {
-  initialTodos: Todo[];
+type Todo = {
+  id: number;
+  content: string;
+  completed: boolean;
 };
 
-export function TodoList({ initialTodos }: TodoListProps) {
-  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+export function TodoList() {
+  const [isMounted, setIsMounted] = useState(false); // untuk fix hydration
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
-  const [isPending, startTransition] = useTransition();
   const [updatingTodoId, setUpdatingTodoId] = useState<number | null>(null);
 
-  async function handleToggle(id: number) {
-    try {
-      setUpdatingTodoId(id);
-      startTransition(async () => {
-        const updatedTodos = await toggleTodo(id);
-        setTodos(updatedTodos);
-      });
-    } catch (error) {
-      console.error("Failed to toggle todo:", error);
-    } finally {
-      setUpdatingTodoId(null);
-    }
+  // Client-only: ambil todos dari localStorage
+  useEffect(() => {
+    setIsMounted(true);
+    const saved = localStorage.getItem("todos");
+    setTodos(saved ? JSON.parse(saved) : [
+      { id: 1, content: "Test 1", completed: false },
+      { id: 2, content: "Test 2", completed: false },
+    ]);
+  }, []);
+
+  // Simpan todos ke localStorage setiap update
+  useEffect(() => {
+    if (isMounted) localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos, isMounted]);
+
+  function handleToggle(id: number) {
+    setUpdatingTodoId(id);
+    setTodos(prev =>
+      prev.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+    setUpdatingTodoId(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!newTodo.trim()) return;
 
-    // Optimistic update
-    const optimisticTodo = {
-      id: Date.now(),
-      title: newTodo,
+    const newItem: Todo = {
+      id: Date.now(), // unique ID client-only
+      content: newTodo,
       completed: false,
     };
 
-    setTodos(prev => [...prev, optimisticTodo]);
+    setTodos(prev => [...prev, newItem]);
     setNewTodo("");
-
-    try {
-      startTransition(async () => {
-        const updatedTodos = await createTodo(newTodo);
-        setTodos(updatedTodos);
-      });
-    } catch (error) {
-      // Revert optimistic update on error
-      setTodos(prev => prev.filter(todo => todo.id !== optimisticTodo.id));
-      console.error("Failed to create todo:", error);
-    }
   }
 
+  function handleDelete(id: number) {
+    setTodos(prev => prev.filter(todo => todo.id !== id));
+  }
+
+  // Jangan render apa-apa di SSR
+  if (!isMounted) return null;
+
   return (
-    <div className="w-full">
+    <div className="w-full animate-fade-in-up">
       {/* Add Todo Form */}
       <form onSubmit={handleSubmit} className="mb-8">
         <div className="flex gap-2">
@@ -70,7 +75,7 @@ export function TodoList({ initialTodos }: TodoListProps) {
           />
           <button
             type="submit"
-            disabled={!newTodo.trim() || isPending}
+            disabled={!newTodo.trim()}
             className="rounded-lg bg-white/[0.1] px-4 py-2 text-sm font-medium text-white hover:bg-white/[0.15] focus:outline-none focus:ring-2 focus:ring-white/[0.3] disabled:opacity-50"
           >
             Add
@@ -83,7 +88,7 @@ export function TodoList({ initialTodos }: TodoListProps) {
         {todos.map(todo => (
           <li
             key={todo.id}
-            className="flex items-center gap-3 rounded-lg bg-white/[0.05] p-4 ring-1 ring-white/[0.1]"
+            className="flex items-center gap-3 rounded-lg bg-white/10 p-4 ring-1 ring-white/[0.1] backdrop-blur-md"
           >
             <div className="relative">
               <input
@@ -103,8 +108,16 @@ export function TodoList({ initialTodos }: TodoListProps) {
                 todo.completed ? "text-zinc-500 line-through" : "text-white"
               }`}
             >
-              {todo.title}
+              {todo.content}
             </span>
+
+            {/* Tombol Hapus */}
+            <button
+              onClick={() => handleDelete(todo.id)}
+              className="text-red-500 hover:text-red-700 font-bold"
+            >
+              🗑
+            </button>
           </li>
         ))}
       </ul>
