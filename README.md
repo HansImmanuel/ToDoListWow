@@ -19,7 +19,7 @@ pnpm install
 3. Use mySQL on XAMPP and make a new database with the name that you need to put on the `.env` file 
 4. Set up your environment variables in the `.env` file :
 
-DATABASE_URL="mysql://root@127.0.0.1:3306/databasename" - > you can change the database name but make sure it matches the mySQL database name
+DATABASE_URL="mysql://your root/databasename" - > you can change the database name but make sure it matches the mySQL database name
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET=superdupersecretkey1234567890lulba
 
