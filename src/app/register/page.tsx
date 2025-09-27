@@ -1,13 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { isValidEmail } from "@/utils/isvalid";
-import { signIn } from "next-auth/react";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,34 +19,23 @@ export default function LoginPage() {
       setError("Please enter a valid email address.");
       return;
     }
-
+    
     setLoading(true);
     try {
-      const res = await signIn("credentials", {
-        redirect: false,
-        email,
-        password,
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-
-      if (res?.error) {
-        setError("Invalid email or password");
-      } else {
-        router.push("/homepage");
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Registration failed");
+      router.push("/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
-  }; 
-
-  const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    e.currentTarget.style.setProperty("--tiltX", String(y * 6));
-    e.currentTarget.style.setProperty("--tiltY", String(x * 6));
-  }, []);
+  };
 
   return (
     <div className="relative min-h-screen w-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#0B1020] via-[#1A1033] to-[#0B1020]">
@@ -64,88 +51,55 @@ export default function LoginPage() {
 
       {/* Aurora gradient layers */}
       <div className="pointer-events-none select-none absolute inset-0 z-0">
-        {/* conic wash toned for subtle directionality */}
         <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "conic-gradient(from 180deg at 35% 15%, rgba(99,102,241,0.22), rgba(6,182,212,0.20), rgba(236,72,153,0.22), rgba(99,102,241,0.22))" }} />
-        {/* brighter, repositioned blobs framing the card */}
         <div className="absolute -top-[38%] -left-[24%] h-[1000px] w-[1000px] rounded-full bg-gradient-to-br from-fuchsia-500/80 to-purple-700/80 blur-[120px] aurora-will-change animate-[aurora_28s_ease-in-out_infinite]" />
         <div className="absolute bottom-[-36%] right-[-26%] h-[1100px] w-[1100px] rounded-full bg-gradient-to-br from-blue-400/80 to-cyan-500/80 blur-[130px] aurora-will-change animate-[aurora_32s_ease-in-out_infinite]" />
         <div className="absolute top-[32%] right-[8%] h-[640px] w-[640px] rounded-full bg-gradient-to-tr from-violet-500/65 to-indigo-600/65 blur-[115px] aurora-will-change animate-[aurora_36s_ease-in-out_infinite]" />
         <div className="absolute top-1/2 -left-24 h-[700px] w-[480px] -translate-y-1/2 rounded-full bg-gradient-to-b from-pink-500/65 to-fuchsia-600/55 blur-[125px] aurora-will-change animate-[aurora_40s_ease-in-out_infinite]" />
         <div className="absolute top-[8%] right-[24%] h-[360px] w-[360px] rounded-full bg-gradient-to-b from-fuchsia-400/55 to-pink-500/45 blur-[90px] aurora-will-change animate-[aurora_44s_ease-in-out_infinite]" />
-        {/* central soft glow and focus halo */}
         <div className="absolute left-1/2 top-1/2 z-[1] h-[720px] w-[720px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.28)_0%,rgba(99,102,241,0.16)_42%,rgba(0,0,0,0)_70%)] blur-[80px]" />
         <div className="absolute left-1/2 top-1/2 z-[2] h-[980px] w-[980px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10)_0%,rgba(255,255,255,0.06)_18%,rgba(0,0,0,0)_45%)]" />
-        {/* softened vignette at the very top */}
         <div className="absolute inset-0 z-[3] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03)_0%,rgba(0,0,0,0.20)_58%,rgba(0,0,0,0.50)_100%)]" />
-        {/* subtle noise texture overlay */}
         <div className="absolute inset-0 z-[4] opacity-[0.08] mix-blend-overlay bg-[url('/noise.png')]" />
       </div>
-      {/* Elevated card with subtle gradient border */}
-      <div
-        onMouseMove={handleMove}
-        style={{ transform: "perspective(1200px) rotateX(calc(var(--tiltX,0)*1deg)) rotateY(calc(var(--tiltY,0)*1deg))" }}
-                 className="relative z-10 w-full max-w-md rounded-2xl p-[1px] bg-gradient-to-b from-white/20 via-white/10 to-white/5 transition-[transform] duration-300 will-change-transform"
-      >
+
+      <div className="relative z-10 w-full max-w-md rounded-2xl p-[1px] bg-gradient-to-b from-white/20 via-white/10 to-white/5">
         <div className="rounded-2xl bg-black/[0.05] backdrop-blur-md p-8 shadow-2xl ring-1 ring-white/[0.08]">
-          <h1 className="text-3xl font-bold text-white text-center mb-6">
-            Welcome To-Do(ers)!
-          </h1>
-          <p className="text-zinc-300/80 text-center mb-8">
-            Let’s make things happen, sign in!
-          </p>
-
-          {error && (
-            <p className="text-center text-base md:text-lg text-red-500 md:text-red-600 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 mb-3 font-medium">
-              {error}
-            </p>
-          )}
-
+          <h1 className="text-3xl font-bold text-white text-center mb-6">Create account</h1>
+          {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-zinc-200 mb-2">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-zinc-200 mb-2">Email</label>
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-lg bg-white/[0.06] px-4 py-2 text-white placeholder:text-zinc-300/60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.15)] transition-shadow"
+                className="w-full rounded-lg bg-white/[0.06] px-4 py-2 text-white placeholder:text-zinc-300/60 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-zinc-200 mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium text-zinc-200 mb-2">Password</label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your password"
-                className="w-full rounded-lg bg-white/[0.06] px-4 py-2 text-white placeholder:text-zinc-300/60 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.15)] transition-shadow"
+                placeholder="minimum 6 characters"
+                className="w-full rounded-lg bg-white/[0.06] px-4 py-2 text-white placeholder:text-zinc-300/60 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 transition-[box-shadow,background-color] duration-300 shadow-[0_0_0_0_rgba(99,102,241,0)] hover:shadow-[0_8px_40px_-6px_rgba(99,102,241,0.45)] disabled:opacity-60"
+              className="w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 transition-colors disabled:opacity-60"
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Creating..." : "Create account"}
             </button>
           </form>
-
           <p className="mt-6 text-center text-sm text-zinc-300/80">
-            Don’t have an account? {""}
-            <a
-              href="/register" //path url sign up ny ke 404 hans
-              className="font-medium text-indigo-300 hover:text-indigo-200"
-            >
-              Sign up 
-            </a>
+            Already have an account? <a href="/login" className="font-medium text-indigo-300 hover:text-indigo-200">Sign in</a>
           </p>
         </div>
       </div>

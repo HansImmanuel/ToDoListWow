@@ -2,20 +2,154 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Subtle aurora drift animation */
+@keyframes aurora {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  25% { transform: translate3d(24px, -18px, 0) scale(1.02); }
+  50% { transform: translate3d(0, 10px, 0) scale(1.03); }
+  75% { transform: translate3d(-20px, -8px, 0) scale(1.01); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.aurora-will-change {
+  will-change: transform;
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes floatParticle {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes drift {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(24px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.animation-delay-600 {
+  animation-delay: 0.6s;
+}
+
+/* Card rotation styles */
+.card-rotated {
+  transform: rotate(12deg) scale(1.1) translateX(4rem) translateY(-0.5rem) !important;
+  transform-origin: center;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-rotated:hover {
+  transform: rotate(16deg) scale(1.15) translateX(4rem) translateY(-0.5rem) !important;
+}
+
+/* Purple liquid consuming effect */
+.card-rotated::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 25%;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.3) 0%, rgba(79, 70, 229, 0.2) 100%);
+  border-radius: 1rem;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: blur(1px);
+  z-index: 1;
+}
+
+.card-rotated:hover::after {
+  opacity: 1;
+  animation: consume 0.8s ease-out;
+}
+
+@keyframes consume {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+    border-radius: 50%;
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+    border-radius: 30%;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    border-radius: 1rem;
+  }
+}
+
 :root {
-  --background: #28a745; /* hijau cerah */
+  --background: #ffffff; /* hijau cerah */
   --foreground: #171717;
 }
 
-@media () {
+@media (prefers-color-scheme: dark) {
   :root {
-    --background: #1e7e34; /* hijau gelap */
+    --background: #da5757; /* hijau gelap */
     --foreground: #ededed;
   }
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  @apply relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#0B1020] via-[#1A1033] to-[#0B1020];
   font-family: Arial, Helvetica, sans-serif;
 }
+
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.8;
+  background-image: conic-gradient(
+    from 180deg at 35% 15%,
+    rgba(99, 102, 241, 0.22),
+    rgba(6, 182, 212, 0.20),
+    rgba(236, 72, 153, 0.22),
+    rgba(99, 102, 241, 0.22)
+  );
+}
+
+body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  mix-blend-mode: overlay;
+  opacity: 0.08;
+  background: url("/noise.png");
+}
+
